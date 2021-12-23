@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 
-from .decorators import unauthenticated_user, admin_only, allowed_users, superuser_only
+from .decorators import unauthenticated_user, superuser_only, staff_only
 from .models import *
 from .forms import OrderForm, CreateUserForm, UpdateOrderForm, UpdateCustomerForm
 from .filters import OrderFilter
@@ -15,8 +15,7 @@ from .filters import OrderFilter
 # Create your views here.
 
 @login_required(login_url='login')
-@admin_only
-@superuser_only
+@staff_only
 def home(request):
     customers = Customer.objects.all()
     orders = Order.objects.all()
@@ -33,14 +32,14 @@ def home(request):
 
 
 @login_required(login_url='login')
-@allowed_users(allowed_roles=['admin'])
+@staff_only
 def products(request):
     products = Product.objects.all()
     return render(request, 'accounts/products.html', {'products': products})
 
 
 @login_required(login_url='login')
-@superuser_only
+@staff_only
 def customer(request, pk_customer):
     cr = Customer.objects.get(id=pk_customer)
     orders = cr.order_set.all()
@@ -82,7 +81,7 @@ def update_customer(request, pk_customer):
 
 
 @login_required(login_url='login')
-@superuser_only
+@staff_only
 def createOrder(request):
     form = OrderForm()
     if request.method == 'POST':
@@ -96,7 +95,7 @@ def createOrder(request):
 
 
 @login_required(login_url='login')
-@superuser_only
+@staff_only
 def updateOrder(request, pk):
     order = Order.objects.get(id=pk)
     form = UpdateOrderForm(instance=order)
@@ -112,7 +111,7 @@ def updateOrder(request, pk):
 
 
 @login_required(login_url='login')
-@superuser_only
+@staff_only
 def deleteOrder(request, pk):
     order = Order.objects.get(id=pk)
     if request.method == 'POST':
@@ -134,7 +133,7 @@ def registerPage(request):
             group = Group.objects.get(name="customer")
             user.groups.add(group)
 
-            Customer.objects.create(user=user, name=user.username)
+            Customer.objects.create(user=user, name=user.username, email=user.email)
 
             messages.success(request, 'Account was created for ' + username)
     context = {'form': form}
@@ -166,7 +165,7 @@ def logoutUser(request):
 
 
 @login_required(login_url='login')
-@superuser_only
+@staff_only
 def deleteCustomer(request, pk_customer):
     customer = Customer.objects.get(id=pk_customer)
     if request.method == 'POST':

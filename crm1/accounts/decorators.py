@@ -54,3 +54,12 @@ def superuser_only(function):
         return function(request, *args, **kwargs)
 
     return _inner
+
+
+def staff_only(function):
+    def _inner(request, *args, **kwargs):
+        if not request.user.is_staff:
+            raise PermissionDenied
+        return function(request, *args, **kwargs)
+
+    return _inner
